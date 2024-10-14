@@ -18,8 +18,11 @@ const electronStore = new Store({
   defaults: {
     data: {
       dailyLog: [],
-      focuses: [{ name: "Other", id: "focus_0", dailyGoal: 0 }],
-      nextFocusNum: 1,
+      focuses: [
+        { name: "Sleep", id: "focus_0", dailyGoal: 1000 * 60 * 30 },
+        { name: "Other", id: "focus_1", dailyGoal: 0 },
+      ],
+      nextFocusNum: 2,
     },
   },
 });

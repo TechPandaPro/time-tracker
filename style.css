@@ -7,9 +7,9 @@ body {
   background-color: rgb(20 20 20);
 }
 
-.focuses {
-  /* background-color: red; */
-}
+/* .focuses {
+  background-color: red;
+} */
 
 .focuses {
   text-align: left;
@@ -28,4 +28,54 @@ body {
   font: inherit;
   padding: 0;
   margin: 0;
+}
+
+.focusName input {
+  /* min-width: 100%; */
+  /* min-width: max(100px, 100%); */
+  /* width: 100%; */
+  min-width: 100%;
+}
+
+.dailyGoalWrapper {
+  position: relative;
+}
+
+/* .dailyGoal div { */
+.dailyGoalUnit {
+  position: absolute;
+  cursor: pointer;
+  /* pointer-events: none; */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.dailyGoalUnit:hover {
+  opacity: 0.9;
+}
+
+/*
+.dailyGoal div::after {
+  pointer-events: none;
+  right: 0;
+  position: absolute;
+}
+
+.dailyGoal div:hover::after,
+.dailyGoal div:focus-within::after {
+  right: 1em;
+}
+
+* .dailyGoal input[data-unit="hours"]::after { *
+.dailyGoal div[data-unit="hours"]::after {
+  content: "hours";
+  * background-color: red; *
+}
+
+.dailyGoal div[data-unit="minutes"]::after {
+  content: "minutes"; *
+}*/
+
+.dailyGoal input {
+  width: 115px;
 }
