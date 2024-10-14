@@ -58,6 +58,8 @@ app.whenReady().then(() => {
     return data;
   });
 
+  // ipcMain.handle("get-focus-icons", (_event) => {});
+
   tray = new Tray("trayIcon_16x16.png");
   const contextMenu = Menu.buildFromTemplate([
     {

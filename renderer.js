@@ -3,6 +3,8 @@ console.log("hello world!");
 const electronApi = window._electronApi;
 
 (async () => {
+  const focusIcons = ["bed", "book", "bug", "chart"];
+
   const data = await electronApi.getData();
   console.log(data);
   const { dailyLog, focuses } = data;
@@ -25,6 +27,22 @@ const electronApi = window._electronApi;
     focusIcon.src = "trayIcon_16x16.png"; // TODO: replace with selected icon
     focusIconCell.append(focusIcon);
     focusRow.append(focusIconCell);
+
+    focusIcon.addEventListener("click", (e) => {
+      if (document.querySelector(".focusSelect")) return;
+      e.stopPropagation();
+      const focusSelect = document.createElement("div");
+      focusSelect.classList.add("focusSelect");
+      for (const item of focusIcons) {
+        const focusSelectItem = document.createElement("button");
+        focusSelectItem.classList.add("focusSelectItem");
+        const focusSelectImage = document.createElement("img");
+        focusSelectImage.src = `focus_icons/${item}.svg`;
+        focusSelectItem.append(focusSelectImage);
+        focusSelect.append(focusSelectItem);
+      }
+      focusIconCell.append(focusSelect);
+    });
 
     // const focusNameCell = document.createElement("td");
     // focusNameCell.classList.add("focusName");
@@ -58,6 +76,7 @@ const electronApi = window._electronApi;
     dailyGoalUnit.classList.add("dailyGoalUnit");
     dailyGoalUnit.innerText = "hours";
     // dailyGoalCell.append(dailyGoalInput, dailyGoalUnit);
+    updateNameElemLimits();
     updateDisplayedDailyGoal();
     dailyGoalInputWrapper.append(dailyGoalInput, dailyGoalUnit);
     dailyGoalCell.append(dailyGoalInputWrapper);
@@ -71,22 +90,45 @@ const electronApi = window._electronApi;
     // }, 100);
 
     dailyGoalInput.addEventListener("input", (e) => {
-      if (dailyGoalInput.value.length > 5)
-        dailyGoalInput.value = String(dailyGoalInput.value).slice(0, 5);
+      if (dailyGoalInput.value.length > 3) {
+        let newValue = String(dailyGoalInput.value).slice(0, 3);
+        newValue = newValue.endsWith(".")
+          ? newValue.slice(0, newValue.length - 1)
+          : newValue;
+        dailyGoalInput.value = newValue;
+      }
+      // console.log();
+      // console.log(dailyGoalInput);
+      // console.log(String(dailyGoalInput.value).slice(0, 3));
       updateDatasetDailyGoal();
       updateUnitElemWidth();
     });
 
     dailyGoalUnit.addEventListener("click", (e) => {
+      dailyGoalInput.focus();
       const newUnit =
         dailyGoalUnit.dataset.unit === "hours" ? "minutes" : "hours";
       dailyGoalUnit.dataset.unit = newUnit;
       dailyGoalUnit.innerText = newUnit;
+      updateNameElemLimits();
       updateDisplayedDailyGoal();
     });
 
     updateNameElemWidth();
     // updateUnitElemWidth();
+
+    document.body.addEventListener("click", () => {
+      const focusSelect = document.querySelector(".focusSelect");
+      if (focusSelect) focusSelect.remove();
+    });
+
+    function updateNameElemLimits() {
+      const unit = dailyGoalUnit.dataset.unit;
+      const min = 0;
+      const max = unit === "hours" ? 24 : 60 * 24;
+      dailyGoalInput.min = min;
+      dailyGoalInput.max = max;
+    }
 
     function updateNameElemWidth() {
       const width = measureTextWidth(focusNameInput.value);
@@ -121,6 +163,10 @@ const electronApi = window._electronApi;
 
     function updateDisplayedDailyGoal() {
       const valueMs = Number(dailyGoalInput.dataset.valueMs);
+      // const displayValue =
+      //   dailyGoalUnit.dataset.unit === "minutes"
+      //     ? Math.round(valueMs / getMsInUnit())
+      //     : valueMs / getMsInUnit();
       const displayValue = valueMs / getMsInUnit();
       dailyGoalInput.value = displayValue;
       updateUnitElemWidth();
