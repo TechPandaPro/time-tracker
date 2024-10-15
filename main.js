@@ -29,12 +29,14 @@ const electronStore = new Store({
           id: "focus_0",
           icon: "book",
           dailyGoal: 1000 * 60 * 30,
+          selectedSince: null,
         },
         {
           name: "Other",
           id: "focus_1",
           icon: "book",
           dailyGoal: 0,
+          selectedSince: null,
         },
       ],
       currentFocus: "focus_1",
@@ -45,8 +47,10 @@ const electronStore = new Store({
 
 console.log(app.getPath("userData"));
 
+let mainWindow;
+
 const createWindow = () => {
-  const win = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -54,13 +58,13 @@ const createWindow = () => {
     },
   });
 
-  win.loadFile("index.html");
+  mainWindow.loadFile("index.html");
 
-  win.webContents.openDevTools({ mode: "detach" });
+  mainWindow.webContents.openDevTools({ mode: "detach" });
 
-  win.on("close", (e) => {
+  mainWindow.on("close", (e) => {
     if (!isQuitting) e.preventDefault();
-    win.hide();
+    mainWindow.hide();
   });
 };
 
@@ -84,6 +88,11 @@ app.whenReady().then(() => {
     focus.icon = newIcon;
     electronStore.set("data.focuses", focuses);
     updateContextMenu();
+    mainWindow.webContents.send(
+      "current-focus-update",
+      // focus.id,
+      focus
+    );
     return { success: true, message: "Focus icon updated" };
   });
 
@@ -97,6 +106,7 @@ app.whenReady().then(() => {
     focus.name = newName;
     electronStore.set("data.focuses", focuses);
     updateContextMenu();
+    mainWindow.webContents.send("current-focus-update", focus);
     return { success: true, message: "Focus name updated" };
   });
 
@@ -110,6 +120,7 @@ app.whenReady().then(() => {
     focus.dailyGoal = newGoalMs;
     console.log(focuses);
     electronStore.set("data.focuses", focuses);
+    mainWindow.webContents.send("current-focus-update", focus);
     return { success: true, message: "Focus goal updated" };
   });
 
@@ -125,6 +136,7 @@ app.whenReady().then(() => {
       id: `focus_${nextFocusNum}`,
       icon: "file",
       dailyGoal: 1000 * 60 * 60,
+      selectedSince: null,
     };
 
     focuses.push(newFocus);
@@ -147,8 +159,6 @@ app.whenReady().then(() => {
     if (newFocuses.length === 0)
       return { success: false, message: "At least one focus must exist" };
 
-    electronStore.set("data.focuses", newFocuses);
-
     if (currentFocus === focusId) {
       const newCurrentFocus =
         focusIndex >= newFocuses.length - 1
@@ -157,8 +167,17 @@ app.whenReady().then(() => {
 
       const newCurrentFocusId = newCurrentFocus.id;
 
+      newCurrentFocus.selectedSince = Date.now();
+
       electronStore.set("data.currentFocus", newCurrentFocusId);
+      mainWindow.webContents.send(
+        "current-focus-update",
+        // newCurrentFocusId,
+        newCurrentFocus
+      );
     }
+
+    electronStore.set("data.focuses", newFocuses);
 
     updateContextMenu();
 
@@ -234,8 +253,25 @@ app.whenReady().then(() => {
                 : undefined,
             checked: currentFocus === focus.id,
             click: () => {
+              // const updatedFocuses = electronStore.get("data.focuses");
+              // const updatedFocus = focuses.find(focus => focus.id === focus.id);
+              // updatedFocus.selectedSince = Date.now();
+              const currentFocusId = electronStore.get("data.currentFocus");
+              focuses.find(
+                (focus) => focus.id === currentFocusId
+              ).selectedSince = null;
+              // TODO: make sure any remaining time is added to total
+
+              focus.selectedSince = Date.now();
+              electronStore.set("data.focuses", focuses);
+
               electronStore.set("data.currentFocus", focus.id);
               updateContextMenu();
+              mainWindow.webContents.send(
+                "current-focus-update",
+                // focus.id,
+                focus
+              );
             },
           }))
         ),

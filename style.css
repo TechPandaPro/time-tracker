@@ -23,6 +23,26 @@ h1 {
   background-color: red;
 } */
 
+.currentFocusLabel {
+  font-style: italic;
+  color: rgb(180 180 180);
+  font-size: 0.9em;
+  margin-bottom: 3px;
+}
+
+div + .currentFocusLabel {
+  margin-top: 6px;
+}
+
+.currentFocusTitle {
+  display: flex;
+  gap: 6px;
+}
+
+.currentFocusName {
+  font-weight: bold;
+}
+
 .focusesContainer {
   overflow-x: auto;
   /* max-width: 80%; */

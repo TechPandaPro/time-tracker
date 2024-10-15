@@ -30,7 +30,79 @@ const electronApi = window._electronApi;
   const data = await electronApi.getData();
   console.log(data);
   // TODO: do stuff with dailyLog
-  const { dailyLog, focuses } = data;
+  const { dailyLog, focuses, currentFocus: currentFocusId } = data;
+
+  // const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
+
+  const currentFocusElem = document.querySelector(".currentFocus");
+
+  const currentFocusIcon = currentFocusElem.querySelector(
+    ".currentFocusIcon > img"
+  );
+  const currentFocusName = currentFocusElem.querySelector(".currentFocusName");
+  const currentFocusTime = currentFocusElem.querySelector(".currentFocusTime");
+  const currentFocusTimeToday = currentFocusTime.querySelector(
+    ".currentFocusTimeToday"
+  );
+  const currentFocusTimeSession = currentFocusTime.querySelector(
+    ".currentFocusTimeSession"
+  );
+  const currentFocusTimeAvg = currentFocusTime.querySelector(
+    ".currentFocusTimeAvg"
+  );
+
+  let currentFocus;
+
+  updateCurrentFocusElem(focuses.find((focus) => focus.id === currentFocusId));
+
+  // electronApi.onCurrentFocusUpdate((focusId, focus) => {
+  electronApi.onCurrentFocusUpdate((updatedFocus) => {
+    // console.log(focusId);
+    // console.log(focus);
+    console.log(`${updatedFocus.id} updated`);
+    console.log(updatedFocus);
+    updateCurrentFocusElem(updatedFocus);
+  });
+
+  setInterval(updateElapsedTimes);
+
+  function updateCurrentFocusElem(_currentFocus) {
+    currentFocus = _currentFocus;
+    currentFocusIcon.src = `focus_icons/${currentFocus.icon}.svg`;
+    currentFocusName.innerText = currentFocus.name;
+    // currentFocusTimeToday.innerText = Date.now() - currentFocus.selectedSince;
+    updateElapsedTimes();
+  }
+
+  function updateElapsedTimes() {
+    const selectedDuration = currentFocus
+      ? Date.now() - currentFocus.selectedSince
+      : "";
+    currentFocusTimeSession.innerText = formatElapsedTime(selectedDuration);
+  }
+
+  function formatElapsedTime(ms) {
+    const units = [
+      { label: "h", value: 1000 * 60 * 60 },
+      { label: "m", value: 1000 * 60 },
+      { label: "s", value: 1000 },
+    ];
+
+    let remaining = ms;
+    let formattedString = "";
+
+    // for (const unit of units) {
+    for (let i = 0; i < units.length; i++) {
+      const unit = units[i];
+      const count = Math.floor(remaining / unit.value);
+      remaining %= unit.value;
+      if (count === 0 && !formattedString && i !== units.length - 1) continue;
+      formattedString += ` ${count}${unit.label}`;
+      formattedString = formattedString.trim();
+    }
+
+    return formattedString;
+  }
 
   // const focusesElem = document.querySelector(".focuses");
 

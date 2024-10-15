@@ -10,6 +10,13 @@ const contextBridgeApi = {
     ipcRenderer.invoke("update-focus-goal", focusId, newGoalMs),
   createFocus: () => ipcRenderer.invoke("create-focus"),
   deleteFocus: (focusId) => ipcRenderer.invoke("delete-focus", focusId),
+  onCurrentFocusUpdate: (callback) =>
+    // ipcRenderer.on("current-focus-update", (_event, focusId, focus) =>
+    //   callback(focusId, focus)
+    // ),
+    ipcRenderer.on("current-focus-update", (_event, updatedFocus) =>
+      callback(updatedFocus)
+    ),
   // getFocusIcons: () => ipcRenderer.invoke("get-focus-icons"),
 };
 
