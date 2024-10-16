@@ -38,9 +38,30 @@ h1 {
   /* border: 2px solid white; */
   border: none;
   font: inherit;
+  font-size: 0.9em;
   /* border-radius: 4px; */
   color: inherit;
-  padding: 8px 12px;
+  padding: 6px 10px;
+  border: 1px solid rgb(30 30 30);
+}
+
+.customSelectButton::after {
+  content: "";
+  position: absolute;
+  /* background-color: red; */
+  /* height: 50px; */
+  border-style: solid;
+  border-width: 6px 6px 0 6px;
+  border-color: rgb(255 255 255) transparent transparent transparent;
+  /* border: 8px solid rgb(255 255 255); */
+  /* width: 50px; */
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.customSelect.expanded .customSelectButton::after {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .customSelectButton,
@@ -58,7 +79,7 @@ h1 {
   background-color: rgb(30 30 30);
   max-height: 150px;
   overflow-y: auto;
-  padding: 8px;
+  padding: 6px;
 }
 
 .customSelectDropdown li,
@@ -69,13 +90,14 @@ h1 {
 .customSelectDropdown li label {
   display: block;
   height: 100%;
-  padding: 8px 12px;
+  padding: 6px 10px;
   /* background-color: blue; */
   border-radius: 6px;
+  font-size: 0.85em;
 }
 
 .customSelectDropdown li + li {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .customSelectDropdown li {

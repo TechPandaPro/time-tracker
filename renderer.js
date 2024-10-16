@@ -72,12 +72,15 @@ const electronApi = window._electronApi;
       // TODO: figure out if these really need to be in sync
       customSelectHidden.value = optionInput.value;
       customSelectButton.innerText = option.innerText;
-      customSelect.classList.remove("expanded");
+      // customSelect.classList.remove("expanded");
     });
 
     const optionLabel = document.createElement("label");
     optionLabel.htmlFor = `${customSelectHidden.dataset.name}_${option.value}`;
     optionLabel.innerText = option.innerText;
+    optionLabel.addEventListener("click", () => {
+      customSelect.classList.remove("expanded");
+    });
 
     optionItem.append(optionInput, optionLabel);
     customSelectDropdown.append(optionItem);
