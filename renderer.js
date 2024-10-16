@@ -36,6 +36,58 @@ const electronApi = window._electronApi;
 
   const currentFocusElem = document.querySelector(".currentFocus");
 
+  // start of custom select
+  const customSelectHidden = document.querySelector(".customSelectHidden");
+
+  const customSelect = document.createElement("div");
+  customSelect.classList.add("customSelect");
+
+  const customSelectButton = document.createElement("button");
+  customSelectButton.classList.add("customSelectButton");
+  customSelectButton.innerText = "Focus"; // TODO: change button text based on selection
+  customSelectButton.addEventListener("click", () => {
+    // if (customSelect.classList.contains("expanded"))
+    //   customSelect.classList.remove("expanded");
+    // else customSelect.classList.add("expanded");
+    customSelect.classList.toggle("expanded");
+  });
+
+  const customSelectDropdown = document.createElement("ul");
+  customSelectDropdown.classList.add("customSelectDropdown");
+
+  for (const option of customSelectHidden.querySelectorAll("option")) {
+    // const optionDiv = document.createElement("div");
+    const optionItem = document.createElement("li");
+    optionItem.classList.add("customSelectOption");
+    optionItem.dataset.id = option.value;
+
+    const optionInput = document.createElement("input");
+    optionInput.type = "radio";
+    optionInput.id = `${customSelectHidden.dataset.name}_${option.value}`;
+    optionInput.name = customSelectHidden.dataset.name;
+    optionInput.value = option.value;
+    optionInput.checked = option.selected;
+    if (option.selected) customSelectButton.innerText = option.innerText;
+    optionInput.addEventListener("change", () => {
+      // TODO: figure out if these really need to be in sync
+      customSelectHidden.value = optionInput.value;
+      customSelectButton.innerText = option.innerText;
+      customSelect.classList.remove("expanded");
+    });
+
+    const optionLabel = document.createElement("label");
+    optionLabel.htmlFor = `${customSelectHidden.dataset.name}_${option.value}`;
+    optionLabel.innerText = option.innerText;
+
+    optionItem.append(optionInput, optionLabel);
+    customSelectDropdown.append(optionItem);
+    // customSelect.append(optionDiv);
+  }
+
+  customSelect.append(customSelectButton, customSelectDropdown);
+  customSelectHidden.after(customSelect);
+  // end of custom select
+
   const currentFocusIcon = currentFocusElem.querySelector(
     ".currentFocusIcon > img"
   );
