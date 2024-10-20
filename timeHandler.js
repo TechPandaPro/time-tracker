@@ -1,6 +1,6 @@
 // this module contains the functions responsible for logging time
 
-import electronStore from "./electronStore";
+import electronStore from "./electronStore.js";
 
 const focuses = electronStore.get("data.focuses");
 let needsSave = false;
@@ -33,6 +33,8 @@ function getSessionStartStamp() {
 // quitting app should also cause save first
 // note that the other functions should already save. this is simply for "intermediate" saves to prevent data loss.
 function saveTime() {
+  console.log(`saving time, ${new Date().toLocaleTimeString()}`);
+
   // TODO: consider adding function for getting current focus
   const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
   if (!currentFocusId) throw new Error("No current focus");
@@ -61,13 +63,15 @@ function saveTime() {
 
   // electronStore.set("data.focuses", focuses);
 
-  if (mostRecentSession.isOngoing) {
+  if (mostRecentSession?.isOngoing) {
     mostRecentSession.end = Date.now();
     electronStore.set("data.focuses", focuses);
   }
 }
 
 function startTime() {
+  console.log(`starting time, ${new Date().toLocaleTimeString()}`);
+
   const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
   if (!currentFocusId) throw new Error("No current focus");
   const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
@@ -75,10 +79,11 @@ function startTime() {
   const mostRecentSession =
     currentFocus.sessions[currentFocus.sessions.length - 1];
 
-  if (mostRecentSession && mostRecentSession.isOngoing)
+  // if (mostRecentSession && mostRecentSession.isOngoing)
+  if (mostRecentSession?.isOngoing)
     throw new Error("Session is already ongoing");
 
-  mostRecentSession.isOngoing = false;
+  if (mostRecentSession) mostRecentSession.isOngoing = false;
 
   const newSession = {
     start: Date.now(),
@@ -91,6 +96,8 @@ function startTime() {
 }
 
 function stopTime() {
+  console.log(`stopping time, ${new Date().toLocaleDateString()}`);
+
   const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
   if (!currentFocusId) throw new Error("No current focus");
   const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
@@ -106,3 +113,5 @@ function stopTime() {
 
   electronStore.set("data.focuses", focuses);
 }
+
+export { getSessionStartStamp, startTime, stopTime };

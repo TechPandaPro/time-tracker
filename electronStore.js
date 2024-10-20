@@ -1,3 +1,5 @@
+// this module initializes and exports the electron store
+
 import Store from "electron-store";
 
 const electronStore = new Store({

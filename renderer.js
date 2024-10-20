@@ -72,6 +72,9 @@ const electronApi = window._electronApi;
     focusOption.dataset.icon = focus.icon;
     focusOption.innerText = focus.name;
     focusSelectInput.append(focusOption);
+    console.log(JSON.stringify(focus, 0, 2));
+    console.log(focus.name);
+    console.log(focusOption.cloneNode(true));
   }
 
   let currentFocus;
@@ -231,15 +234,19 @@ const electronApi = window._electronApi;
     currentFocus = _currentFocus;
 
     // console.log(currentFocus.id);
+    focusSelectInput.value = currentFocus.id;
     const toUpdateSelectOption =
       focusSelectInput.querySelector("option:checked");
-    focusSelectInput.value = currentFocus.id;
     toUpdateSelectOption.innerText = currentFocus.name;
     toUpdateSelectOption.dataset.icon = currentFocus.icon;
     // console.log(focusSelectInput.value);
     // console.log(currentFocus.id);
     // console.log(focusSelectInput.cloneNode());
     // console.log(focusSelectInput.value);
+    // console.log(toUpdateSelectOption);
+    // console.log(currentFocus.id);
+    // console.log(currentFocus.name);
+    // console.log("update these!");
     updateCustomSelects();
 
     currentFocusIcon.src = `focus_icons/${currentFocus.icon}.svg`;

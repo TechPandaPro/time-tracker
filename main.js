@@ -10,6 +10,7 @@ import {
 import { readdirSync } from "fs";
 import path from "path";
 import electronStore from "./electronStore.js";
+import { startTime, stopTime } from "./timeHandler.js";
 // import electronStore from "./electronStore";
 // const { app, Menu, Tray } = require("electron");
 
@@ -256,13 +257,15 @@ app.whenReady().then(() => {
         label: "Start Timer",
         type: "normal",
         accelerator: "CommandOrControl+Alt+Shift+S",
-        click: () => console.log("start timer"),
+        // click: () => console.log("start timer"),
+        click: startTime,
       },
       {
         label: "Stop Timer",
         type: "normal",
         accelerator: "CommandOrControl+Alt+Shift+P",
         enabled: false,
+        click: stopTime,
       },
       { type: "separator" },
       {
