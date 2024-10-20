@@ -6,9 +6,11 @@ import {
   // globalShortcut,
   ipcMain,
 } from "electron";
-import Store from "electron-store";
+// import Store from "electron-store";
 import { readdirSync } from "fs";
 import path from "path";
+import electronStore from "./electronStore.js";
+// import electronStore from "./electronStore";
 // const { app, Menu, Tray } = require("electron");
 
 if (process.platform !== "darwin") throw new Error("Platform not supported");
@@ -19,31 +21,35 @@ const focusIcons = readdirSync("focus_icons")
   .filter((fileName) => fileName.endsWith(".svg"))
   .map((fileName) => fileName.split(".")[0]);
 
-const electronStore = new Store({
-  defaults: {
-    data: {
-      dailyLog: [],
-      focuses: [
-        {
-          name: "Sleep",
-          id: "focus_0",
-          icon: "book",
-          dailyGoal: 1000 * 60 * 30,
-          selectedSince: null,
-        },
-        {
-          name: "Other",
-          id: "focus_1",
-          icon: "book",
-          dailyGoal: 0,
-          selectedSince: null,
-        },
-      ],
-      currentFocus: "focus_1",
-      nextFocusNum: 2,
-    },
-  },
-});
+// FIXME: fix app breaking when data is empty
+
+// const electronStore = new Store({
+//   defaults: {
+//     data: {
+//       dailyLog: [],
+//       focuses: [
+//         {
+//           name: "Sleep",
+//           id: "focus_0",
+//           icon: "bed",
+//           dailyGoal: 1000 * 60 * 30,
+//           selectedSince: null,
+//           sessions: [],
+//         },
+//         {
+//           name: "Other",
+//           id: "focus_1",
+//           icon: "file",
+//           dailyGoal: 0,
+//           selectedSince: null,
+//           sessions: [],
+//         },
+//       ],
+//       currentFocus: "focus_1",
+//       nextFocusNum: 2,
+//     },
+//   },
+// });
 
 console.log(app.getPath("userData"));
 
@@ -71,6 +77,8 @@ const createWindow = () => {
 let tray = null;
 
 app.whenReady().then(() => {
+  let selectedSince = null;
+
   ipcMain.handle("get-data", (_event) => {
     console.log("retrieving data");
     const data = electronStore.get("data");
@@ -80,7 +88,7 @@ app.whenReady().then(() => {
 
   ipcMain.handle("update-focus-icon", (_event, focusId, newIcon) => {
     // if ()
-    const focuses = electronStore.get("data.focuses");
+    const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
     const focus = focuses.find((focus) => focus.id === focusId);
     if (!focus) return { success: false, message: "Focus not found" };
     if (!focusIcons.includes(newIcon))
@@ -88,17 +96,19 @@ app.whenReady().then(() => {
     focus.icon = newIcon;
     electronStore.set("data.focuses", focuses);
     updateContextMenu();
-    mainWindow.webContents.send(
-      "current-focus-update",
-      // focus.id,
-      focus
-    );
+    if (focus.id === currentFocusId)
+      mainWindow.webContents.send(
+        "current-focus-update",
+        // focus.id,
+        focus
+      );
     return { success: true, message: "Focus icon updated" };
   });
 
   ipcMain.handle("update-focus-name", (_event, focusId, newName) => {
     // if ()
-    const focuses = electronStore.get("data.focuses");
+    // const focuses = electronStore.get("data.focuses");
+    const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
     const focus = focuses.find((focus) => focus.id === focusId);
     if (!focus) return { success: false, message: "Focus not found" };
     if (typeof newName !== "string")
@@ -106,13 +116,14 @@ app.whenReady().then(() => {
     focus.name = newName;
     electronStore.set("data.focuses", focuses);
     updateContextMenu();
-    mainWindow.webContents.send("current-focus-update", focus);
+    if (focus.id === currentFocusId)
+      mainWindow.webContents.send("current-focus-update", focus);
     return { success: true, message: "Focus name updated" };
   });
 
   ipcMain.handle("update-focus-goal", (_event, focusId, newGoalMs) => {
     // if ()
-    const focuses = electronStore.get("data.focuses");
+    const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
     const focus = focuses.find((focus) => focus.id === focusId);
     if (!focus) return { success: false, message: "Focus not found" };
     if (Number.isNaN(newGoalMs))
@@ -120,8 +131,16 @@ app.whenReady().then(() => {
     focus.dailyGoal = newGoalMs;
     console.log(focuses);
     electronStore.set("data.focuses", focuses);
-    mainWindow.webContents.send("current-focus-update", focus);
+    if (focus.id === currentFocusId)
+      mainWindow.webContents.send("current-focus-update", focus);
     return { success: true, message: "Focus goal updated" };
+  });
+
+  ipcMain.handle("set-focus", (_event, focusId) => {
+    // console.log(focusId);
+    const success = setFocus(focusId);
+    if (success) return { success: true, message: "Selected focus updated" };
+    else return { success: false, message: "Error setting focus" };
   });
 
   ipcMain.handle("create-focus", (_event) => {
@@ -137,6 +156,7 @@ app.whenReady().then(() => {
       icon: "file",
       dailyGoal: 1000 * 60 * 60,
       selectedSince: null,
+      sessions: [],
     };
 
     focuses.push(newFocus);
@@ -190,6 +210,10 @@ app.whenReady().then(() => {
   updateContextMenu();
   createWindow();
 
+  updateTrayTitle();
+
+  setInterval(updateTrayTitle, 1000);
+
   app.on("before-quit", () => {
     isQuitting = true;
   });
@@ -207,11 +231,13 @@ app.whenReady().then(() => {
   }
 
   function updateContextMenu() {
-    const { focuses, currentFocus } = electronStore.get("data");
+    const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
 
-    const currentIconName = focuses.find(
-      (focus) => focus.id === currentFocus
-    )?.icon;
+    const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
+
+    selectedSince = currentFocus.selectedSince;
+
+    const currentIconName = currentFocus?.icon;
 
     tray.setImage(
       currentIconName
@@ -252,27 +278,7 @@ app.whenReady().then(() => {
                 ? `CommandOrControl+Alt+Shift+${index + 1}`
                 : undefined,
             checked: currentFocus === focus.id,
-            click: () => {
-              // const updatedFocuses = electronStore.get("data.focuses");
-              // const updatedFocus = focuses.find(focus => focus.id === focus.id);
-              // updatedFocus.selectedSince = Date.now();
-              const currentFocusId = electronStore.get("data.currentFocus");
-              focuses.find(
-                (focus) => focus.id === currentFocusId
-              ).selectedSince = null;
-              // TODO: make sure any remaining time is added to total
-
-              focus.selectedSince = Date.now();
-              electronStore.set("data.focuses", focuses);
-
-              electronStore.set("data.currentFocus", focus.id);
-              updateContextMenu();
-              mainWindow.webContents.send(
-                "current-focus-update",
-                // focus.id,
-                focus
-              );
-            },
+            click: () => setFocus(focus.id),
           }))
         ),
       },
@@ -281,6 +287,35 @@ app.whenReady().then(() => {
     ]);
     // tray.setToolTip("test tooltip");
     tray.setContextMenu(contextMenu);
+  }
+
+  function setFocus(focusId) {
+    console.log(focusId);
+
+    const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
+
+    // const updatedFocuses = electronStore.get("data.focuses");
+    // const updatedFocus = focuses.find(focus => focus.id === focus.id);
+    // updatedFocus.selectedSince = Date.now();
+    // const currentFocusId = electronStore.get("data.currentFocus");
+    focuses.find((focus) => focus.id === currentFocusId).selectedSince = null;
+    // TODO: make sure any remaining time is added to total
+
+    const nextSelectedFocus = focuses.find((focus) => focus.id === focusId);
+    if (!nextSelectedFocus) return false;
+
+    nextSelectedFocus.selectedSince = Date.now();
+    electronStore.set("data.focuses", focuses);
+
+    electronStore.set("data.currentFocus", nextSelectedFocus.id);
+    updateContextMenu();
+    mainWindow.webContents.send(
+      "current-focus-update",
+      // focus.id,
+      nextSelectedFocus
+    );
+
+    return true;
   }
 
   // prevent automatically quitting
@@ -293,4 +328,35 @@ app.whenReady().then(() => {
   // function startTimer() {
   //   console.log("start timer");
   // }
+
+  function updateTrayTitle() {
+    if (!selectedSince) return tray.setTitle("");
+    // TODO: consider using monospaced for this
+    tray.setTitle(formatElapsedTime(Date.now() - selectedSince), {
+      fontType: "monospacedDigit",
+    });
+  }
 });
+
+function formatElapsedTime(ms) {
+  const units = [
+    { label: "h", value: 1000 * 60 * 60 },
+    { label: "m", value: 1000 * 60 },
+    { label: "s", value: 1000 },
+  ];
+
+  let remaining = ms;
+  let formattedString = "";
+
+  // for (const unit of units) {
+  for (let i = 0; i < units.length; i++) {
+    const unit = units[i];
+    const count = Math.floor(remaining / unit.value);
+    remaining %= unit.value;
+    if (count === 0 && !formattedString && i !== units.length - 1) continue;
+    formattedString += ` ${count}${unit.label}`;
+    formattedString = formattedString.trim();
+  }
+
+  return formattedString;
+}

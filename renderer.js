@@ -34,62 +34,22 @@ const electronApi = window._electronApi;
 
   // const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
 
-  const currentFocusElem = document.querySelector(".currentFocus");
-
-  // start of custom select
-  const customSelectHidden = document.querySelector(".customSelectHidden");
-
-  const customSelect = document.createElement("div");
-  customSelect.classList.add("customSelect");
-
-  const customSelectButton = document.createElement("button");
-  customSelectButton.classList.add("customSelectButton");
-  customSelectButton.innerText = "Focus"; // TODO: change button text based on selection
-  customSelectButton.addEventListener("click", () => {
-    // if (customSelect.classList.contains("expanded"))
-    //   customSelect.classList.remove("expanded");
-    // else customSelect.classList.add("expanded");
-    customSelect.classList.toggle("expanded");
+  document.addEventListener("click", (e) => {
+    // if (e.target.matches(".customSelect *")) return;
+    const allCustomSelectExpanded = document.querySelectorAll(
+      ".customSelect.expanded"
+    );
+    for (const customSelectExpanded of allCustomSelectExpanded) {
+      if (customSelectExpanded.contains(e.target)) continue;
+      customSelectExpanded.classList.remove("expanded");
+    }
   });
 
-  const customSelectDropdown = document.createElement("ul");
-  customSelectDropdown.classList.add("customSelectDropdown");
+  const currentFocusElem = document.querySelector(".currentFocus");
 
-  for (const option of customSelectHidden.querySelectorAll("option")) {
-    // const optionDiv = document.createElement("div");
-    const optionItem = document.createElement("li");
-    optionItem.classList.add("customSelectOption");
-    optionItem.dataset.id = option.value;
-
-    const optionInput = document.createElement("input");
-    optionInput.type = "radio";
-    optionInput.id = `${customSelectHidden.dataset.name}_${option.value}`;
-    optionInput.name = customSelectHidden.dataset.name;
-    optionInput.value = option.value;
-    optionInput.checked = option.selected;
-    if (option.selected) customSelectButton.innerText = option.innerText;
-    optionInput.addEventListener("change", () => {
-      // TODO: figure out if these really need to be in sync
-      customSelectHidden.value = optionInput.value;
-      customSelectButton.innerText = option.innerText;
-      // customSelect.classList.remove("expanded");
-    });
-
-    const optionLabel = document.createElement("label");
-    optionLabel.htmlFor = `${customSelectHidden.dataset.name}_${option.value}`;
-    optionLabel.innerText = option.innerText;
-    optionLabel.addEventListener("click", () => {
-      customSelect.classList.remove("expanded");
-    });
-
-    optionItem.append(optionInput, optionLabel);
-    customSelectDropdown.append(optionItem);
-    // customSelect.append(optionDiv);
-  }
-
-  customSelect.append(customSelectButton, customSelectDropdown);
-  customSelectHidden.after(customSelect);
-  // end of custom select
+  const focusSelectInput = currentFocusElem.querySelector(
+    '.customSelectHidden[data-name="focusSelectInput"]'
+  );
 
   const currentFocusIcon = currentFocusElem.querySelector(
     ".currentFocusIcon > img"
@@ -106,6 +66,14 @@ const electronApi = window._electronApi;
     ".currentFocusTimeAvg"
   );
 
+  for (const focus of focuses) {
+    const focusOption = document.createElement("option");
+    focusOption.value = focus.id;
+    focusOption.dataset.icon = focus.icon;
+    focusOption.innerText = focus.name;
+    focusSelectInput.append(focusOption);
+  }
+
   let currentFocus;
 
   updateCurrentFocusElem(focuses.find((focus) => focus.id === currentFocusId));
@@ -121,10 +89,162 @@ const electronApi = window._electronApi;
 
   setInterval(updateElapsedTimes);
 
+  updateCustomSelects();
+
+  // FIXME: prevent page from shifting when calling function ?
+  function updateCustomSelects() {
+    for (const existingCustomSelect of document.querySelectorAll(
+      ".customSelect"
+    ))
+      existingCustomSelect.remove();
+
+    // const customSelectHidden = document.querySelector(".customSelectHidden");
+
+    for (const customSelectHidden of document.querySelectorAll(
+      ".customSelectHidden"
+    )) {
+      const customSelect = document.createElement("div");
+      customSelect.classList.add("customSelect");
+
+      const customSelectButton = document.createElement("button");
+      customSelectButton.classList.add("customSelectButton");
+
+      // customSelectButton.innerText = "Focus"; // TODO: change button text based on selection
+
+      const customSelectButtonImg = document.createElement("img");
+      customSelectButtonImg.width = 16;
+      customSelectButtonImg.height = 16;
+      customSelectButtonImg.src = `focus_icons/unknown.png`;
+      // customSelectButton.append(customSelectButtonImg);
+
+      const customSelectButtonText = document.createElement("span");
+      customSelectButtonText.innerText = "Focus";
+
+      customSelectButton.append(customSelectButtonImg, customSelectButtonText);
+
+      customSelectButton.addEventListener("click", () => {
+        // if (customSelect.classList.contains("expanded"))
+        //   customSelect.classList.remove("expanded");
+        // else customSelect.classList.add("expanded");
+        customSelect.classList.toggle("expanded");
+
+        customSelect.scrollTo(0, 0);
+        const selectedLabel = customSelect.querySelector(
+          ".customSelectOption input:checked ~ label"
+        );
+        // const selectedLabelPos = selectedLabel.getBoundingClientRect();
+        // setTimeout(() => {
+        //   if (selectedLabel) selectedLabel.scrollIntoView();
+        // }, 500);
+        const top = selectedLabel.offsetTop;
+        if (
+          selectedLabel.offsetTop + selectedLabel.offsetHeight >
+          customSelectDropdown.offsetHeight
+        ) {
+          customSelectDropdown.scrollTo(
+            0,
+            selectedLabel.offsetTop -
+              customSelectDropdown.offsetHeight / 2 +
+              selectedLabel.offsetHeight / 2
+          );
+        }
+      });
+
+      const customSelectDropdown = document.createElement("ul");
+      customSelectDropdown.classList.add("customSelectDropdown");
+
+      for (const option of customSelectHidden.querySelectorAll("option")) {
+        // const optionDiv = document.createElement("div");
+        const optionItem = document.createElement("li");
+        optionItem.classList.add("customSelectOption");
+        optionItem.dataset.id = option.value;
+
+        const optionInput = document.createElement("input");
+        optionInput.type = "radio";
+        optionInput.id = `${customSelectHidden.dataset.name}_${option.value}`;
+        optionInput.name = customSelectHidden.dataset.name;
+        optionInput.value = option.value;
+        optionInput.checked = option.selected;
+        if (option.selected) {
+          // console.log(`set to ${option.dataset.icon}`);
+          // console.log(customSelectButtonImg);
+          customSelectButtonImg.src = `focus_icons/${option.dataset.icon}.png`;
+          customSelectButtonText.innerText = option.innerText;
+        }
+        optionInput.addEventListener("change", () => {
+          // TODO: figure out if these really need to be in sync
+          customSelectHidden.value = optionInput.value;
+          customSelectButtonText.innerText = option.innerText;
+          // customSelect.classList.remove("expanded");
+          handleSelectOptionChange(
+            customSelectHidden.dataset.name,
+            customSelectHidden.value
+          );
+        });
+
+        const optionLabel = document.createElement("label");
+        optionLabel.htmlFor = `${customSelectHidden.dataset.name}_${option.value}`;
+        // optionLabel.innerText = option.innerText;
+
+        const optionLabelImg = document.createElement("img");
+        optionLabelImg.width = 16;
+        optionLabelImg.height = 16;
+        optionLabelImg.src = `focus_icons/${option.dataset.icon}.png`;
+        // customSelectButton.append(customSelectButtonImg);
+
+        const optionLabelText = document.createElement("span");
+        optionLabelText.innerText = option.innerText;
+
+        optionLabel.append(optionLabelImg, optionLabelText);
+
+        optionLabel.addEventListener("click", () => {
+          customSelect.classList.remove("expanded");
+        });
+
+        optionItem.append(optionInput, optionLabel);
+        customSelectDropdown.append(optionItem);
+        // customSelect.append(optionDiv);
+      }
+
+      customSelect.append(customSelectButton, customSelectDropdown);
+      customSelectHidden.after(customSelect);
+    }
+  }
+
+  function handleSelectOptionChange(selectName, newValue) {
+    switch (selectName) {
+      case "focusSelectInput":
+        console.log(newValue);
+        electronApi.setFocus(newValue).then((result) => {
+          console.log(result);
+          if (!result.success) return;
+          // focusRow.remove();
+          // nothing else needs to happen, since onCurrentFocusUpdate will be called
+        });
+        break;
+      default:
+        console.log(`Select menu with name "${selectName}" not recognized`);
+    }
+  }
+
   function updateCurrentFocusElem(_currentFocus) {
     currentFocus = _currentFocus;
+
+    // console.log(currentFocus.id);
+    const toUpdateSelectOption =
+      focusSelectInput.querySelector("option:checked");
+    focusSelectInput.value = currentFocus.id;
+    toUpdateSelectOption.innerText = currentFocus.name;
+    toUpdateSelectOption.dataset.icon = currentFocus.icon;
+    // console.log(focusSelectInput.value);
+    // console.log(currentFocus.id);
+    // console.log(focusSelectInput.cloneNode());
+    // console.log(focusSelectInput.value);
+    updateCustomSelects();
+
     currentFocusIcon.src = `focus_icons/${currentFocus.icon}.svg`;
     currentFocusName.innerText = currentFocus.name;
+
     // currentFocusTimeToday.innerText = Date.now() - currentFocus.selectedSince;
     updateElapsedTimes();
   }
@@ -178,6 +298,13 @@ const electronApi = window._electronApi;
       // console.log(newFocus);
       // console.log("create new focus");
       createFocusElem(newFocus, true);
+
+      const focusOption = document.createElement("option");
+      focusOption.value = newFocus.id;
+      focusOption.dataset.icon = newFocus.icon;
+      focusOption.innerText = newFocus.name;
+      focusSelectInput.append(focusOption);
+      updateCustomSelects();
     });
   });
 
@@ -211,9 +338,29 @@ const electronApi = window._electronApi;
         focusSelectItem.addEventListener("click", (e) => {
           console.log(item);
           focusIcon.src = itemSrc;
-          electronApi
-            .updateFocusIcon(focus.id, item)
-            .then((result) => console.log(result));
+          electronApi.updateFocusIcon(focus.id, item).then((result) => {
+            console.log(result);
+            if (!result.success) return;
+            const thisFocusOption = focusSelectInput.querySelector(
+              `option[value="${focus.id}"]`
+            );
+            if (thisFocusOption) {
+              thisFocusOption.dataset.icon = item;
+              updateCustomSelects();
+            }
+
+            // const toUpdateSelectOption = focusSelectInput.querySelector(
+            //   `option[value="${focus.id}"]`
+            // );
+            // focusSelectInput.value = currentFocus.id;
+            // toUpdateSelectOption.innerText = currentFocus.name;
+            // toUpdateSelectOption.dataset.icon = currentFocus.icon;
+            // console.log(focusSelectInput.value);
+            // console.log(currentFocus.id);
+            // console.log(focusSelectInput.cloneNode());
+            // console.log(focusSelectInput.value);
+            // updateCustomSelects();
+          });
         });
         const focusSelectImage = document.createElement("img");
         focusSelectImage.src = itemSrc;
@@ -242,7 +389,17 @@ const electronApi = window._electronApi;
     focusNameInput.addEventListener("change", (e) => {
       electronApi
         .updateFocusName(focus.id, focusNameInput.value)
-        .then((result) => console.log(result));
+        .then((result) => {
+          console.log(result);
+          if (!result.success) return;
+          const thisFocusOption = focusSelectInput.querySelector(
+            `option[value="${focus.id}"]`
+          );
+          if (thisFocusOption) {
+            thisFocusOption.innerText = focusNameInput.value;
+            updateCustomSelects();
+          }
+        });
     });
 
     const dailyGoalCell = document.createElement("td");
@@ -280,11 +437,18 @@ const electronApi = window._electronApi;
     focusRow.append(deleteCell);
 
     deleteBtn.addEventListener("click", () => {
-      if (!confirm("Are you sure you want to delete this focus?")) return;
+      if (
+        !confirm(
+          "Are you sure you want to delete this focus? This will erase all logs for this focus."
+        )
+      )
+        return;
       electronApi.deleteFocus(focus.id).then((result) => {
         console.log(result);
         if (!result.success) return;
         focusRow.remove();
+        focusSelectInput.querySelector(`option[value="${focus.id}"]`)?.remove();
+        updateCustomSelects();
       });
       // console.log("delete focus");
     });

@@ -9,7 +9,7 @@
   </head>
   <body>
     <h1>Time Tracker</h1>
-    <p>Simplified time tracking.</p>
+    <p class="slogan">Simplified time tracking.</p>
     <!-- <h1>Hello, World!</h1> -->
     <!-- <div class="focuses">
       <h2>Focuses</h2>
@@ -17,8 +17,8 @@
     <h2>Current Focus</h2>
     <div class="currentFocus">
       <div class="currentFocusLabel">Focus:</div>
-      <select class="customSelectHidden" data-name="customSelect">
-        <option value="1" data-icon="file">Example 1</option>
+      <select class="customSelectHidden" data-name="focusSelectInput">
+        <!-- <option value="1" data-icon="file">Example 1</option>
         <option value="2" data-icon="video">Example 2</option>
         <option value="3" data-icon="cart">Another Example</option>
         <option value="4" data-icon="file">Example 1</option>
@@ -32,9 +32,13 @@
         <option value="12" data-icon="cart">Another Example</option>
         <option value="13" data-icon="file">Example 1</option>
         <option value="14" data-icon="video">Example 2</option>
-        <option value="15" data-icon="cart">Another Example</option>
+        <option value="15" data-icon="cart">Another Example</option> -->
       </select>
-      <div class="currentFocusTitle">
+      <!-- TODO: add another select menu for format of time in tray: none, 0h 0m 0s, 00h 00m 00s, 00:00:00, maybe font options too -->
+      <!-- TODO: prevent JS from updating *every* select menu - instead only update the relevant one -->
+      <!-- FIXME: unhide or remove. hidden temporarily to easily test various ui ideas. -->
+      <!-- TODO: consider moving current focus v to top window bar instead (https://www.electronjs.org/docs/latest/tutorial/window-customization) -->
+      <div class="currentFocusTitle" style="display: none">
         <div class="currentFocusIcon">
           <img src="focus_icons/unknown.png" width="16" height="16" />
         </div>
@@ -42,10 +46,16 @@
       </div>
       <div class="currentFocusLabel">Time Elapsed:</div>
       <div class="currentFocusTime">
-        <div>Today: <span class="currentFocusTimeToday"></span></div>
-        <div>This Session: <span class="currentFocusTimeSession"></span></div>
-        <div>
-          Daily Average (1 wk):
+        <div class="currentFocusTimeSection">
+          <span class="currentFocusTimeLabel">Today: </span>
+          <span class="currentFocusTimeToday"></span>
+        </div>
+        <div class="currentFocusTimeSection">
+          <span class="currentFocusTimeLabel">This Session: </span>
+          <span class="currentFocusTimeSession"></span>
+        </div>
+        <div class="currentFocusTimeSection">
+          <span class="currentFocusTimeLabel">Daily Average (1 wk): </span>
           <span class="currentFocusTimeAvg"></span>
         </div>
       </div>
