@@ -24,7 +24,7 @@ function getSessionStartStamp() {
   const mostRecentSession =
     currentFocus.sessions[currentFocus.sessions.length - 1];
 
-  if (!mostRecentSession.isOngoing) return null;
+  if (!mostRecentSession?.isOngoing) return null;
 
   return mostRecentSession.start;
 }

@@ -10,7 +10,7 @@ import {
 import { readdirSync } from "fs";
 import path from "path";
 import electronStore from "./electronStore.js";
-import { startTime, stopTime } from "./timeHandler.js";
+import { getSessionStartStamp, startTime, stopTime } from "./timeHandler.js";
 // import electronStore from "./electronStore";
 // const { app, Menu, Tray } = require("electron");
 
@@ -101,7 +101,7 @@ app.whenReady().then(() => {
       mainWindow.webContents.send(
         "current-focus-update",
         // focus.id,
-        focus
+        { ...focus, selectedSince }
       );
     return { success: true, message: "Focus icon updated" };
   });
@@ -118,7 +118,10 @@ app.whenReady().then(() => {
     electronStore.set("data.focuses", focuses);
     updateContextMenu();
     if (focus.id === currentFocusId)
-      mainWindow.webContents.send("current-focus-update", focus);
+      mainWindow.webContents.send("current-focus-update", {
+        ...focus,
+        selectedSince,
+      });
     return { success: true, message: "Focus name updated" };
   });
 
@@ -133,7 +136,10 @@ app.whenReady().then(() => {
     console.log(focuses);
     electronStore.set("data.focuses", focuses);
     if (focus.id === currentFocusId)
-      mainWindow.webContents.send("current-focus-update", focus);
+      mainWindow.webContents.send("current-focus-update", {
+        ...focus,
+        selectedSince,
+      });
     return { success: true, message: "Focus goal updated" };
   });
 
@@ -156,7 +162,7 @@ app.whenReady().then(() => {
       id: `focus_${nextFocusNum}`,
       icon: "file",
       dailyGoal: 1000 * 60 * 60,
-      selectedSince: null,
+      // selectedSince: null,
       sessions: [],
     };
 
@@ -170,6 +176,8 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("delete-focus", (_event, focusId) => {
+    if (selectedSince) stopTime();
+
     const { focuses, currentFocus } = electronStore.get("data");
 
     const focusIndex = focuses.findIndex((focus) => focus.id === focusId);
@@ -186,19 +194,22 @@ app.whenReady().then(() => {
           ? newFocuses[newFocuses.length - 1]
           : newFocuses[focusIndex];
 
+      // this should never happen, since >=1 focus should always be remaining!
+      if (!newCurrentFocus) throw new Error("New current focus not found");
+
       const newCurrentFocusId = newCurrentFocus.id;
 
-      newCurrentFocus.selectedSince = Date.now();
+      // newCurrentFocus.selectedSince = Date.now();
 
       electronStore.set("data.currentFocus", newCurrentFocusId);
       mainWindow.webContents.send(
         "current-focus-update",
         // newCurrentFocusId,
-        newCurrentFocus
+        { ...newCurrentFocus, selectedSince }
       );
     }
 
-    electronStore.set("data.focuses", newFocuses);
+    // electronStore.set("data.focuses", newFocuses);
 
     updateContextMenu();
 
@@ -236,7 +247,13 @@ app.whenReady().then(() => {
 
     const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
 
-    selectedSince = currentFocus.selectedSince;
+    // selectedSince = currentFocus.selectedSince;
+
+    selectedSince = getSessionStartStamp();
+
+    // console.log("update context menu!");
+
+    // console.log(selectedSince);
 
     const currentIconName = currentFocus?.icon;
 
@@ -257,15 +274,53 @@ app.whenReady().then(() => {
         label: "Start Timer",
         type: "normal",
         accelerator: "CommandOrControl+Alt+Shift+S",
+        enabled: !selectedSince,
         // click: () => console.log("start timer"),
-        click: startTime,
+        // TODO: make it so that this also updates on dashboard
+        click: () => {
+          startTime();
+
+          const { focuses, currentFocus: currentFocusId } =
+            electronStore.get("data");
+          if (!currentFocusId) throw new Error("No current focus");
+          const currentFocus = focuses.find(
+            (focus) => focus.id === currentFocusId
+          );
+          mainWindow.webContents.send("current-focus-update", {
+            ...currentFocus,
+            selectedSince: getSessionStartStamp(),
+          });
+
+          // need to get current focus and updated selectedSince (selectedSince is currently updated within updateContextMenu())
+          // mainWindow.webContents.send(
+          //   "current-focus-update",
+          //   { ...focus, selectedSince }
+          // );
+          updateContextMenu();
+        },
       },
       {
         label: "Stop Timer",
         type: "normal",
         accelerator: "CommandOrControl+Alt+Shift+P",
         enabled: false,
-        click: stopTime,
+        enabled: !!selectedSince,
+        click: () => {
+          stopTime();
+
+          const { focuses, currentFocus: currentFocusId } =
+            electronStore.get("data");
+          if (!currentFocusId) throw new Error("No current focus");
+          const currentFocus = focuses.find(
+            (focus) => focus.id === currentFocusId
+          );
+          mainWindow.webContents.send("current-focus-update", {
+            ...currentFocus,
+            selectedSince: getSessionStartStamp(),
+          });
+
+          updateContextMenu();
+        },
       },
       { type: "separator" },
       {
@@ -290,32 +345,37 @@ app.whenReady().then(() => {
     ]);
     // tray.setToolTip("test tooltip");
     tray.setContextMenu(contextMenu);
+
+    updateTrayTitle();
   }
 
   function setFocus(focusId) {
-    console.log(focusId);
+    // console.log(focusId);
 
-    const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
+    if (selectedSince) stopTime();
+
+    // const { focuses, currentFocus: currentFocusId } = electronStore.get("data");
+    const { focuses } = electronStore.get("data");
 
     // const updatedFocuses = electronStore.get("data.focuses");
     // const updatedFocus = focuses.find(focus => focus.id === focus.id);
     // updatedFocus.selectedSince = Date.now();
     // const currentFocusId = electronStore.get("data.currentFocus");
-    focuses.find((focus) => focus.id === currentFocusId).selectedSince = null;
+    // focuses.find((focus) => focus.id === currentFocusId).selectedSince = null;
     // TODO: make sure any remaining time is added to total
 
     const nextSelectedFocus = focuses.find((focus) => focus.id === focusId);
     if (!nextSelectedFocus) return false;
 
-    nextSelectedFocus.selectedSince = Date.now();
-    electronStore.set("data.focuses", focuses);
+    // nextSelectedFocus.selectedSince = Date.now();
+    // electronStore.set("data.focuses", focuses);
 
     electronStore.set("data.currentFocus", nextSelectedFocus.id);
     updateContextMenu();
     mainWindow.webContents.send(
       "current-focus-update",
       // focus.id,
-      nextSelectedFocus
+      { ...nextSelectedFocus, selectedSince }
     );
 
     return true;

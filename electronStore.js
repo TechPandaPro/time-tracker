@@ -5,14 +5,14 @@ import Store from "electron-store";
 const electronStore = new Store({
   defaults: {
     data: {
-      dailyLog: [],
+      // dailyLog: [],
       focuses: [
         {
           name: "Sleep",
           id: "focus_0",
           icon: "bed",
           dailyGoal: 1000 * 60 * 30,
-          selectedSince: null,
+          // selectedSince: null,
           sessions: [],
         },
         {
@@ -20,7 +20,7 @@ const electronStore = new Store({
           id: "focus_1",
           icon: "file",
           dailyGoal: 0,
-          selectedSince: null,
+          // selectedSince: null,
           sessions: [],
         },
       ],

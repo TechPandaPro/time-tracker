@@ -30,7 +30,8 @@ const electronApi = window._electronApi;
   const data = await electronApi.getData();
   console.log(data);
   // TODO: do stuff with dailyLog
-  const { dailyLog, focuses, currentFocus: currentFocusId } = data;
+  // const { dailyLog, focuses, currentFocus: currentFocusId } = data;
+  const { focuses, currentFocus: currentFocusId } = data;
 
   // const currentFocus = focuses.find((focus) => focus.id === currentFocusId);
 
@@ -72,14 +73,35 @@ const electronApi = window._electronApi;
     focusOption.dataset.icon = focus.icon;
     focusOption.innerText = focus.name;
     focusSelectInput.append(focusOption);
-    console.log(JSON.stringify(focus, 0, 2));
-    console.log(focus.name);
-    console.log(focusOption.cloneNode(true));
+    // console.log(JSON.stringify(focus, 0, 2));
+    // console.log(focus.name);
+    // console.log(focusOption.cloneNode(true));
   }
 
   let currentFocus;
 
-  updateCurrentFocusElem(focuses.find((focus) => focus.id === currentFocusId));
+  let initialCurrFocus = focuses.find((focus) => focus.id === currentFocusId);
+  const initialCurrFocusRecentSession =
+    initialCurrFocus.sessions[initialCurrFocus.sessions.length - 1];
+  if (initialCurrFocus)
+    initialCurrFocus = {
+      ...initialCurrFocus,
+      selectedSince: initialCurrFocusRecentSession?.isOngoing
+        ? initialCurrFocusRecentSession.start
+        : null,
+    };
+
+  // from timeHandler.js for reference:
+  // const mostRecentSession =
+  //   currentFocus.sessions[currentFocus.sessions.length - 1];
+
+  // if (!mostRecentSession?.isOngoing) return null;
+
+  // return mostRecentSession.start;
+
+  // updateCurrentFocusElem(focuses.find((focus) => focus.id === currentFocusId));
+
+  updateCurrentFocusElem(initialCurrFocus);
 
   // electronApi.onCurrentFocusUpdate((focusId, focus) => {
   electronApi.onCurrentFocusUpdate((updatedFocus) => {
@@ -231,13 +253,35 @@ const electronApi = window._electronApi;
   }
 
   function updateCurrentFocusElem(_currentFocus) {
+    // const mostRecentSession =
+    //   _currentFocus.sessions[_currentFocus.sessions.length - 1];
+    // const selectedSince = mostRecentSession?.isOngoing
+    //   ? mostRecentSession.start
+    //   : null;
+
+    // currentFocus = { ..._currentFocus, selectedSince };
+
+    // currentFocus = { ..._currentFocus };
+
     currentFocus = _currentFocus;
 
+    // const mostRecentSession =
+    // currentFocus.sessions[currentFocus.sessions.length - 1];
+
+    // if (!mostRecentSession?.isOngoing) return null;
+
+    // return mostRecentSession.start;
+
     // console.log(currentFocus.id);
+    // console.log(focusSelectInput);
+    // console.log(currentFocus);
+    // console.log(`set to ${currentFocus.id}`);
     focusSelectInput.value = currentFocus.id;
     const toUpdateSelectOption =
       focusSelectInput.querySelector("option:checked");
+    // console.log("a");
     toUpdateSelectOption.innerText = currentFocus.name;
+    // console.log("b");
     toUpdateSelectOption.dataset.icon = currentFocus.icon;
     // console.log(focusSelectInput.value);
     // console.log(currentFocus.id);
@@ -250,17 +294,23 @@ const electronApi = window._electronApi;
     updateCustomSelects();
 
     currentFocusIcon.src = `focus_icons/${currentFocus.icon}.svg`;
+    // console.log("c");
     currentFocusName.innerText = currentFocus.name;
+    // console.log("d");
 
     // currentFocusTimeToday.innerText = Date.now() - currentFocus.selectedSince;
     updateElapsedTimes();
   }
 
   function updateElapsedTimes() {
-    const selectedDuration = currentFocus
-      ? Date.now() - currentFocus.selectedSince
-      : "";
-    currentFocusTimeSession.innerText = formatElapsedTime(selectedDuration);
+    const selectedSince = currentFocus?.selectedSince;
+    // const selectedDuration = currentFocus
+    //   ? Date.now() - currentFocus.selectedSince
+    //   : "";
+    if (selectedSince) {
+      const selectedDuration = Date.now() - currentFocus.selectedSince;
+      currentFocusTimeSession.innerText = formatElapsedTime(selectedDuration);
+    } else currentFocusTimeSession.innerText = "N/A";
   }
 
   function formatElapsedTime(ms) {
