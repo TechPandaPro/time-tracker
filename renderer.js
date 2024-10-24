@@ -52,6 +52,9 @@ const electronApi = window._electronApi;
     '.customSelectHidden[data-name="focusSelectInput"]'
   );
 
+  const startTimerBtn = document.querySelector(".startTimerBtn");
+  const stopTimerBtn = document.querySelector(".stopTimerBtn");
+
   const currentFocusIcon = currentFocusElem.querySelector(
     ".currentFocusIcon > img"
   );
@@ -66,6 +69,17 @@ const electronApi = window._electronApi;
   const currentFocusTimeAvg = currentFocusTime.querySelector(
     ".currentFocusTimeAvg"
   );
+
+  // startTimerBtn.addEventListener("click", () => {
+  //   electronApi.startTimer();
+  // });
+
+  // stopTimerBtn.addEventListener("click", () => {
+  //   electronApi.stopTimer();
+  // });
+
+  startTimerBtn.addEventListener("click", electronApi.startTimer);
+  stopTimerBtn.addEventListener("click", electronApi.stopTimer);
 
   for (const focus of focuses) {
     const focusOption = document.createElement("option");
@@ -297,6 +311,9 @@ const electronApi = window._electronApi;
     // console.log("c");
     currentFocusName.innerText = currentFocus.name;
     // console.log("d");
+
+    startTimerBtn.disabled = !!currentFocus.selectedSince;
+    stopTimerBtn.disabled = !currentFocus.selectedSince;
 
     // currentFocusTimeToday.innerText = Date.now() - currentFocus.selectedSince;
     updateElapsedTimes();

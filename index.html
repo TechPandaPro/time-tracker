@@ -44,6 +44,19 @@
         </div>
         <div class="currentFocusName"></div>
       </div>
+      <div class="currentFocusLabel">Timer:</div>
+      <div class="timerButtons">
+        <button class="startTimerBtn">Start Timer</button>
+        <button class="stopTimerBtn">Stop Timer</button>
+      </div>
+      <div class="currentFocusTip">
+        <!-- Tip: Time Tracker works best if you always leave your timer running! -->
+        <!-- TODO: add way to hide this tip ? would have to be saved in electronStore -->
+        <span class="currentFocusTipLabel">Tip: </span>If you prefer, you can
+        also leave your timer always running (even when your computer is
+        asleep)! If you prefer to utilize Time Tracker in such a way, just be
+        sure to switch your focus accordingly.
+      </div>
       <div class="currentFocusLabel">Time Elapsed:</div>
       <div class="currentFocusTime">
         <div class="currentFocusTimeSection">
@@ -75,5 +88,10 @@
       </table>
       <button class="newFocus">New Focus</button>
     </div>
+    <!-- TODO: add section to see daily overview -->
+    <!-- look to ios screen time for inspo -->
+    <!-- consider using chart.js to help -->
+    <!-- should also show week's daily average -->
+    <!-- maybe sum over periods of time too (1 day, specifically today, would be default though) -->
   </body>
 </html>

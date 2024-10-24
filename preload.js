@@ -11,6 +11,8 @@ const contextBridgeApi = {
   setFocus: (focusId) => ipcRenderer.invoke("set-focus", focusId),
   createFocus: () => ipcRenderer.invoke("create-focus"),
   deleteFocus: (focusId) => ipcRenderer.invoke("delete-focus", focusId),
+  startTimer: () => ipcRenderer.invoke("start-timer"),
+  stopTimer: () => ipcRenderer.invoke("stop-timer"),
   onCurrentFocusUpdate: (callback) =>
     // ipcRenderer.on("current-focus-update", (_event, focusId, focus) =>
     //   callback(focusId, focus)

@@ -1,6 +1,7 @@
 // this module contains the functions responsible for logging time
 
 import electronStore from "./electronStore.js";
+import sendCurrentFocusUpdate from "./sendCurrentFocusUpdate.js";
 
 const focuses = electronStore.get("data.focuses");
 let needsSave = false;
@@ -93,6 +94,8 @@ function startTime() {
   currentFocus.sessions.push(newSession);
 
   electronStore.set("data.focuses", focuses);
+
+  sendCurrentFocusUpdate();
 }
 
 function stopTime() {
@@ -112,6 +115,8 @@ function stopTime() {
   mostRecentSession.isOngoing = false;
 
   electronStore.set("data.focuses", focuses);
+
+  sendCurrentFocusUpdate();
 }
 
 export { getSessionStartStamp, startTime, stopTime };

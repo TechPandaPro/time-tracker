@@ -31,6 +31,34 @@ h2 {
   margin-bottom: 0.4em;
 }
 
+button {
+  padding: 4px 8px;
+  border-radius: 5px;
+  color: inherit;
+  font: inherit;
+  font-size: 0.85em;
+  border: 2px solid rgb(60 60 60);
+  background-color: rgb(30 30 30);
+  /* cursor: pointer; */
+  transition: border-color 0.1s, background-color 0.1s, color 0.1s, opacity 0.1s;
+}
+
+button:enabled {
+  cursor: pointer;
+}
+
+button:enabled:hover {
+  border-color: rgb(70 70 70);
+  background-color: rgb(40 40 40);
+}
+
+button:disabled {
+  color: rgb(127 127 127);
+  /* border-color: rgb(50 50 50); */
+  opacity: 0.8;
+  /* cursor: not-allowed; */
+}
+
 .customSelectHidden {
   display: none;
 }
@@ -124,6 +152,7 @@ h2 {
   padding: 6px;
   scrollbar-width: thin;
   scrollbar-color: rgb(127 127 127) transparent;
+  z-index: 10;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
@@ -195,6 +224,21 @@ div + .currentFocusLabel {
   margin-top: 6px;
 }
 
+.currentFocusTip {
+  /* font-style: italic; */
+  /* font-weight: bold; */
+  /* color: rgb(200 200 200); */
+  color: rgb(160 160 160);
+  max-width: 430px;
+  font-size: 0.8em;
+  margin-left: 5px;
+  margin-top: 5px;
+}
+
+.currentFocusTipLabel {
+  font-style: italic;
+}
+
 .currentFocusTimeSection {
   margin-top: 4px;
 }
@@ -210,6 +254,12 @@ div + .currentFocusLabel {
 
 .currentFocusName {
   font-weight: bold;
+}
+
+.timerButtons {
+  display: flex;
+  gap: 5px;
+  /* margin-top: 6px; */
 }
 
 .focusesContainer {
@@ -403,6 +453,7 @@ div + .currentFocusLabel {
   height: 16px;
 }
 
+/* TODO: maybe disable delete button when there's only 1 focus left */
 .deleteFocus button:hover {
   opacity: 0.8;
 }
@@ -411,7 +462,7 @@ div + .currentFocusLabel {
   margin-top: 5px;
 }
 
-.newFocus {
+/* .newFocus {
   padding: 4px 8px;
   border-radius: 5px;
   color: inherit;
@@ -426,4 +477,4 @@ div + .currentFocusLabel {
 .newFocus:hover {
   border-color: rgb(70 70 70);
   background-color: rgb(40 40 40);
-}
+} */
